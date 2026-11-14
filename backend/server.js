@@ -1,0 +1,88 @@
+
+require("dotenv").config({
+    path: require("path").join(__dirname, ".env")
+});
+
+const express = require("express");
+const cors = require("cors");
+const nodemailer = require("nodemailer");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Home route
+app.get("/", (req, res) => {
+    res.send("My Portfolio Backend is Running!");
+});
+
+// Test route
+app.get("/test", (req, res) => {
+    res.send("TEST ROUTE WORKS!");
+});
+
+// Gmail configuration
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+// Contact form route
+app.post("/api/contact", async (req, res) => {
+
+    const { name, email, message } = req.body;
+
+    if (!name || !email || !message) {
+        return res.status(400).json({
+            success: false,
+            message: "All fields are required!"
+        });
+    }
+
+    try {
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: process.env.RECEIVER_EMAIL,
+            replyTo: email,
+            subject: "New Message From My Portfolio",
+
+            text: `
+New Contact Message
+
+Name: ${name}
+Email: ${email}
+
+Message:
+${message}
+            `
+        });
+
+        console.log("Email sent successfully!");
+
+        res.json({
+            success: true,
+            message: "Your message was sent successfully!"
+        });
+
+    } catch (error) {
+
+        console.error("Email Error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Message could not be sent. Please try again later."
+        });
+    }
+});
+
+// Start server
+const PORT = 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+});
