@@ -1,105 +1,50 @@
 
 // ==================================
-// 1. DARK MODE
-// ==================================
-
-const themeButton = document.getElementById("theme-toggle");
-
-themeButton.addEventListener("click", function () {
-
-    document.body.classList.toggle("dark-mode");
-
-    if (document.body.classList.contains("dark-mode")) {
-        themeButton.textContent = "☀️ Light Mode";
-    } else {
-        themeButton.textContent = "🌙 Dark Mode";
-    }
-
-});
-
-
-// ==================================
-// 2. MOBILE MENU
-// ==================================
-
-const menuButton = document.getElementById("menu-toggle");
-const navLinks = document.getElementById("nav-links");
-
-menuButton.addEventListener("click", function () {
-
-    navLinks.classList.toggle("active");
-
-    if (navLinks.classList.contains("active")) {
-        menuButton.textContent = "✕";
-    } else {
-        menuButton.textContent = "☰";
-    }
-
-});
-
-
-// Close menu after clicking a link
-
-document.querySelectorAll("#nav-links a").forEach(function(link) {
-
-    link.addEventListener("click", function() {
-
-        navLinks.classList.remove("active");
-        menuButton.textContent = "☰";
-
-    });
-
-});
-
-
-// ==================================
-// 3. CONTACT FORM - BACKEND
+// 1. CONTACT FORM
 // ==================================
 
 const contactForm = document.getElementById("contact-form");
 
-contactForm.addEventListener("submit", async function(event) {
+if (contactForm) {
+    contactForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
 
-    event.preventDefault();
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        const message = document.getElementById("message").value;
 
-    const name = document.getElementById("name").value;
-    const email = document.getElementById("email").value;
-    const message = document.getElementById("message").value;
+        const button = contactForm.querySelector("button");
+        button.disabled = true;
+        button.textContent = "Sending...";
 
-    const status = document.getElementById("form-status");
+        try {
+            const response = await fetch("https://my-portfolio-1-a1sp.onrender.com/api/contact", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    message: message
+                })
+            });
 
-    try {
+            const result = await response.json();
 
-        const response = await fetch("https://my-portfolio-1-a1sp.onrender.com/api/contact",  {
+            if (response.ok) {
+                alert("Your message was sent successfully!");
+                contactForm.reset();
+            } else {
+                alert(result.message || "Message could not be sent.");
+            }
 
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                name: name,
-                email: email,
-                message: message
-            })
-
-        });
-
-        const result = await response.json();
-
-        status.textContent = result.message;
-
-        if (response.ok) {
-            contactForm.reset();
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Connection error. Please try again.");
         }
 
-    } catch (error) {
-
-        status.textContent = "Could not connect to the server!";
-
-        console.error("Error:", error);
-
-    }
-
-});
+        button.disabled = false;
+        button.textContent = "Send Message";
+    });
+}
