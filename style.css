@@ -851,3 +851,71 @@ body.dark-mode #projects .project-card {
     background: #1f2937;
     border-color: #374151;
 }
+
+/* =================================
+   MOBILE RESPONSIVE DESIGN
+================================= */
+
+@media screen and (max-width: 768px) {
+
+    body {
+        overflow-x: hidden;
+    }
+
+    nav {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    section {
+        padding: 50px 20px;
+    }
+
+    h1 {
+        font-size: 32px;
+    }
+
+    h2 {
+        font-size: 26px;
+    }
+
+    .projects-container {
+        grid-template-columns: 1fr;
+    }
+
+    .project-card {
+        width: 100%;
+    }
+
+    .profile-image img {
+        max-width: 200px;
+        height: auto;
+    }
+
+    input,
+    textarea,
+    button {
+        max-width: 100%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+
+    h1 {
+        font-size: 27px;
+    }
+
+    nav ul {
+        gap: 8px;
+    }
+
+    nav ul li a {
+        font-size: 14px;
+    }
+}
