@@ -5,7 +5,6 @@ require("dotenv").config({
 
 const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
 
 const app = express();
 
@@ -22,16 +21,7 @@ app.get("/test", (req, res) => {
     res.send("TEST ROUTE WORKS!");
 });
 
-// Gmail configuration
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
-
-// Contact form route
+// Contact form route using Resend API
 app.post("/api/contact", async (req, res) => {
 
     const { name, email, message } = req.body;
@@ -43,15 +33,27 @@ app.post("/api/contact", async (req, res) => {
         });
     }
 
+    if (!process.env.RESEND_API_KEY || !process.env.RECEIVER_EMAIL) {
+        return res.status(500).json({
+            success: false,
+            message: "Email configuration is missing."
+        });
+    }
+
     try {
 
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: process.env.RECEIVER_EMAIL,
-            replyTo: email,
-            subject: "New Message From My Portfolio",
-
-            text: `
+        const response = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                from: "My Portfolio <onboarding@resend.dev>",
+                to: [process.env.RECEIVER_EMAIL],
+                reply_to: email,
+                subject: "New Message From My Portfolio",
+                text: `
 New Contact Message
 
 Name: ${name}
@@ -59,10 +61,22 @@ Email: ${email}
 
 Message:
 ${message}
-            `
+                `
+            })
         });
 
-        console.log("Email sent successfully!");
+        const result = await response.json();
+
+        if (!response.ok) {
+            console.error("Resend Error:", result);
+
+            return res.status(500).json({
+                success: false,
+                message: "Email could not be sent."
+            });
+        }
+
+        console.log("Email sent successfully!", result.id);
 
         res.json({
             success: true,
@@ -75,7 +89,7 @@ ${message}
 
         res.status(500).json({
             success: false,
-            message: "Message could not be sent. Please try again later."
+            message: "Connection error. Please try again later."
         });
     }
 });
@@ -84,5 +98,5 @@ ${message}
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
